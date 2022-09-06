@@ -9369,6 +9369,55 @@ components:
           format: int64
           type: integer
       type: object
+    SLOOverallStatuses:
+      description: Overall status of the SLO by timeframes.
+      properties:
+        error:
+          description: Error message if SLO status or error budget could not be calculated.
+          type: string
+        indexed_at:
+          description: 'timestamp (UNIX time in seconds) of when the SLO status and
+            error budget
+
+            were calculated.'
+          example: 1662496260
+          type: number
+        raw_error_budget_remaining:
+          $ref: '#/components/schemas/SLORawErrorBudgetRemaining'
+        span_precision:
+          description: The amount of decimal places the SLI value is accurate to.
+          example: 2
+          format: int64
+          type: number
+        status:
+          description: The status of the SLO.
+          example: 100
+          format: double
+          type: number
+        target:
+          description: The target of the SLO.
+          example: 99
+          format: double
+          type: number
+        timeframe:
+          description: Timeframe that the SLO status and error budget is associated
+            with.
+          example: 7d
+          type: string
+      type: object
+    SLORawErrorBudgetRemaining:
+      description: Error budget remaining for an SLO.
+      properties:
+        unit:
+          description: Error budget remaining unit.
+          example: requests
+          type: string
+        value:
+          description: Error budget remaining value.
+          example: 60
+          format: double
+          type: number
+      type: object
     SLOResponse:
       description: A service level objective response containing a single service
         level objective.
@@ -10212,6 +10261,11 @@ components:
           description: The name of the service level objective object.
           example: Custom Metric SLO
           type: string
+        overall_status:
+          description: SLOs
+          items:
+            $ref: '#/components/schemas/SLOOverallStatuses'
+          type: array
         query:
           $ref: '#/components/schemas/ServiceLevelObjectiveQuery'
         tags:
@@ -26439,7 +26493,11 @@ paths:
       description: Get a list of service level objective objects for your organization.
       operationId: SearchSLO
       parameters:
-      - description: The query string to filter results based on SLO names.
+      - description: 'The query string to filter results based on SLO names.
+
+          Some examples of queries include `service:<service-name>`
+
+          and `env:prod AND <name-of-an-slo>`.'
         in: query
         name: query
         required: false
@@ -26460,6 +26518,12 @@ paths:
         schema:
           format: int64
           type: integer
+      - description: Whether or not to return facet information in the response `[default=false]`.
+        in: query
+        name: include_facets
+        required: false
+        schema:
+          type: boolean
       responses:
         '200':
           content:
@@ -26489,6 +26553,7 @@ paths:
             description: The regional site for Datadog customers.
             enum:
             - datadoghq.com
+            - datadoghq.eu
             - us3.datadoghq.com
             - us5.datadoghq.com
             - ddog-gov.com
@@ -26517,9 +26582,7 @@ paths:
       x-menu-order: 1
       x-undo:
         type: safe
-      x-unstable: '**Note**: Note: This endpoint is in public beta for US regions.
-
-        It is not currently supported in the EU region.
+      x-unstable: '**Note**: This endpoint is in public beta.
 
         If you have any feedback, contact [Datadog support](https://docs.datadoghq.com/help/).'
   /api/v1/slo/{slo_id}:
